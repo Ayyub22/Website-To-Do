@@ -9,8 +9,18 @@ const todoRoutes = require('./routes/todos');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-connectDB();
+// Ensure DB is connected for API requests
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/todos')) {
+    try {
+      await connectDB();
+    } catch (error) {
+      console.error('DB Connection Middleware Error:', error);
+      return res.status(500).json({ success: false, message: 'Database connection failed' });
+    }
+  }
+  next();
+});
 
 // Middleware
 app.use(cors());
