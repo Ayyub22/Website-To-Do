@@ -17,8 +17,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve frontend static files
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// Serve frontend static files under /frontend
+app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
 
 // API Routes
 app.use('/todos', todoRoutes);
@@ -30,7 +30,7 @@ app.get('/api/health', (req, res) => {
 
 // Fallback: serve index.html for non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Start server
