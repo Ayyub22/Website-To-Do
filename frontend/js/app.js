@@ -1,7 +1,10 @@
 // ============================================
 // Config
 // ============================================
-const API_URL = 'http://localhost:3000/todos';
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_URL = (isLocalhost && window.location.port !== '3000') 
+  ? 'http://localhost:3000/todos' 
+  : '/todos';
 
 // ============================================
 // State
