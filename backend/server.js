@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 // Ensure DB is connected for API requests
 app.use(async (req, res, next) => {
-  if (req.path.startsWith('/todos')) {
+  if (req.path.startsWith('/api/todos') || req.path.startsWith('/api/health')) {
     try {
       await connectDB();
     } catch (error) {
@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
 
 // API Routes
-app.use('/todos', todoRoutes);
+app.use('/api/todos', todoRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
