@@ -2,7 +2,7 @@
 
 Aplikasi Todo List full-stack dengan **Node.js/Express**, **MongoDB Atlas**, dan frontend **vanilla HTML/CSS/JS**.
 
-## 🚀 Fitur
+##  Fitur
 
 - ✅ Tambah todo baru (title + deskripsi)
 - ✏️ Edit todo
@@ -12,7 +12,7 @@ Aplikasi Todo List full-stack dengan **Node.js/Express**, **MongoDB Atlas**, dan
 - 🎨 Dark theme premium dengan glassmorphism
 - 📱 Responsive design
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer    | Technology       |
 | -------- | ---------------- |
@@ -21,7 +21,7 @@ Aplikasi Todo List full-stack dengan **Node.js/Express**, **MongoDB Atlas**, dan
 | ODM      | Mongoose         |
 | Frontend | HTML, CSS, JS    |
 
-## 📦 Setup
+##  Setup
 
 ### 1. Clone & Install
 
