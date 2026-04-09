@@ -1468,6 +1468,14 @@ input[value="high"]:checked + .priority-high {
   margin-top: 20px;
 }
 
+.mb-sm {
+  margin-bottom: 16px;
+}
+
+.mb-md {
+  margin-bottom: 24px;
+}
+
 
 @media (max-width: 480px) {
   .auth-card {
