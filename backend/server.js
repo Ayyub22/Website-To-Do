@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // Ensure DB is connected for API requests
 app.use(async (req, res, next) => {
-  if (req.path.startsWith('/api/todos') || req.path.startsWith('/api/health')) {
+  if (req.path.startsWith('/api/')) {
     try {
       await connectDB();
     } catch (error) {
