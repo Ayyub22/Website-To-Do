@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Todo List App — Kelola tugas kamu dengan mudah, lengkap dengan prioritas, kategori, dan deadline">
+  <title>TaskFlow — Smart Todo Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Animated background -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="blob blob-4"></div>
+  </div>
+
+  <!-- Confetti container -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <span class="logo-text">TaskFlow</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebar-close" title="Close sidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="stat-total">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        <div class="stat-card stat-active">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="stat-active">0</span>
+            <span class="stat-label">Aktif</span>
+          </div>
+        </div>
+        <div class="stat-card stat-done">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="stat-completed">0</span>
+            <span class="stat-label">Selesai</span>
+          </div>
+        </div>
+        <div class="stat-card stat-overdue">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="stat-overdue">0</span>
+            <span class="stat-label">Terlambat</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>Progress</span>
+          <span class="progress-pct" id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">
+          <i class="fas fa-folder"></i> Kategori
+        </h3>
+        <div class="category-list" id="category-list">
+          <button class="category-item active" data-category="all">
+            <i class="fas fa-globe"></i>
+            <span>Semua</span>
+            <span class="category-count" id="cat-count-all">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk Actions -->
+      <div class="sidebar-section sidebar-bottom">
+        <h3 class="sidebar-title">
+          <i class="fas fa-bolt"></i> Quick Actions
+        </h3>
+        <button class="bulk-btn" id="btn-mark-all" title="Tandai semua selesai">
+          <i class="fas fa-check-double"></i> Tandai Semua Selesai
+        </button>
+        <button class="bulk-btn bulk-danger" id="btn-clear-completed" title="Hapus yang selesai">
+          <i class="fas fa-trash-alt"></i> Hapus Yang Selesai
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="menu-toggle" id="menu-toggle" title="Toggle menu">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Cari todo..." autocomplete="off">
+            <button class="search-clear" id="search-clear" style="display:none">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <div class="filter-pills">
+            <button class="pill active" data-filter="all">Semua</button>
+            <button class="pill" data-filter="active">Aktif</button>
+            <button class="pill" data-filter="completed">Selesai</button>
+          </div>
+          <button class="btn-add-float" id="btn-open-form" title="Tambah todo baru">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Add Todo Panel (collapsible) -->
+      <section class="add-panel" id="add-panel">
+        <form id="todo-form" class="todo-form">
+          <div class="form-row">
+            <div class="form-group form-grow">
+              <div class="input-wrapper">
+                <i class="fas fa-pencil input-icon"></i>
+                <input type="text" id="todo-title" placeholder="Apa yang ingin kamu lakukan?" required maxlength="200" autocomplete="off">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group form-grow">
+              <div class="input-wrapper">
+                <i class="fas fa-align-left input-icon"></i>
+                <textarea id="todo-description" placeholder="Deskripsi (opsional)" rows="2" maxlength="1000"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="form-row form-options">
+            <div class="form-group">
+              <label><i class="fas fa-flag"></i> Prioritas</label>
+              <div class="priority-selector">
+                <input type="radio" name="priority" value="low" id="p-low">
+                <label for="p-low" class="priority-opt priority-low">
+                  <i class="fas fa-arrow-down"></i> Low
+                </label>
+                <input type="radio" name="priority" value="medium" id="p-medium" checked>
+                <label for="p-medium" class="priority-opt priority-medium">
+                  <i class="fas fa-minus"></i> Medium
+                </label>
+                <input type="radio" name="priority" value="high" id="p-high">
+                <label for="p-high" class="priority-opt priority-high">
+                  <i class="fas fa-arrow-up"></i> High
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-folder"></i> Kategori</label>
+              <div class="input-wrapper input-sm">
+                <input type="text" id="todo-category" placeholder="General" maxlength="50" autocomplete="off" list="category-suggestions">
+                <datalist id="category-suggestions"></datalist>
+              </div>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-calendar"></i> Deadline</label>
+              <div class="input-wrapper input-sm">
+                <input type="date" id="todo-due-date">
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-form">Batal</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Tambah Todo
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Priority Filter Pills -->
+      <section class="priority-filters" id="priority-filters">
+        <button class="priority-pill active" data-priority="all">
+          <i class="fas fa-layer-group"></i> Semua
+        </button>
+        <button class="priority-pill" data-priority="high">
+          <span class="dot dot-high"></span> High
+        </button>
+        <button class="priority-pill" data-priority="medium">
+          <span class="dot dot-medium"></span> Medium
+        </button>
+        <button class="priority-pill" data-priority="low">
+          <span class="dot dot-low"></span> Low
+        </button>
+      </section>
+
+      <!-- Todo List -->
+      <section class="todo-section">
+        <div id="loading" class="state-message">
+          <div class="spinner"></div>
+          <p>Memuat data...</p>
+        </div>
+
+        <div id="empty-state" class="state-message" style="display:none;">
+          <div class="empty-illustration">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <h3>Belum ada todo</h3>
+          <p>Klik tombol <strong>+</strong> untuk menambahkan tugas pertamamu!</p>
+        </div>
+
+        <div id="todo-list" class="todo-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2><i class="fas fa-edit"></i> Edit Todo</h2>
+        <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="edit-form" class="modal-body">
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+          <label for="edit-title">Title</label>
+          <input type="text" id="edit-title" required maxlength="200">
+        </div>
+        <div class="form-group">
+          <label for="edit-description">Deskripsi</label>
+          <textarea id="edit-description" rows="3" maxlength="1000"></textarea>
+        </div>
+        <div class="form-row form-options">
+          <div class="form-group">
+            <label>Prioritas</label>
+            <div class="priority-selector">
+              <input type="radio" name="edit-priority" value="low" id="ep-low">
+              <label for="ep-low" class="priority-opt priority-low">
+                <i class="fas fa-arrow-down"></i> Low
+              </label>
+              <input type="radio" name="edit-priority" value="medium" id="ep-medium">
+              <label for="ep-medium" class="priority-opt priority-medium">
+                <i class="fas fa-minus"></i> Medium
+              </label>
+              <input type="radio" name="edit-priority" value="high" id="ep-high">
+              <label for="ep-high" class="priority-opt priority-high">
+                <i class="fas fa-arrow-up"></i> High
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-category">Kategori</label>
+            <input type="text" id="edit-category" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="edit-due-date">Deadline</label>
+            <input type="date" id="edit-due-date">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-edit">Batal</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal-overlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2><i class="fas fa-trash-alt"></i> Hapus Todo</h2>
+        <button class="modal-close" id="delete-modal-close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="delete-msg">Apakah kamu yakin ingin menghapus <strong id="delete-title"></strong>?</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-delete">Batal</button>
+          <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+            <i class="fas fa-trash"></i> Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
