@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth');
 const todoRoutes = require('./routes/todos');
 
 const app = express();
@@ -31,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 
 // Health check

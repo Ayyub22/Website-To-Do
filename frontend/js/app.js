@@ -9,6 +9,9 @@ const API_URL = (isLocalhost && window.location.port !== '3000')
 // ============================================
 // State
 // ============================================
+let authToken = localStorage.getItem('taskflow_token');
+let activeUser = null;
+
 let todos = [];
 let stats = { total: 0, completed: 0, active: 0, highPriority: 0, overdue: 0 };
 let categories = [];
@@ -17,6 +20,24 @@ let currentPriority = 'all';
 let currentCategory = 'all';
 let searchQuery = '';
 let deleteTargetId = null;
+
+// ============================================
+// Auth & App UI Switching
+// ============================================
+const authWrapper = $('#auth-wrapper');
+const appWrapper = $('#app-wrapper');
+const loginFormWrapper = $('#login-form');
+const registerFormWrapper = $('#register-form');
+const goToRegister = $('#go-to-register');
+const goToLogin = $('#go-to-login');
+const btnLogout = $('#btn-logout');
+
+const loginEmail = $('#login-email');
+const loginPassword = $('#login-password');
+
+const regUsername = $('#reg-username');
+const regEmail = $('#reg-email');
+const regPassword = $('#reg-password');
 
 // ============================================
 // DOM Elements
@@ -184,6 +205,28 @@ function showToast(message, type = 'info') {
 }
 
 // ============================================
+// Custom Fetch Helper
+// ============================================
+async function authFetch(url, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
+  const response = await fetch(url, { ...options, headers });
+  
+  if (response.status === 401) {
+    logoutUser('Sesi telah habis, silakan masuk kembali');
+  }
+  
+  return response;
+}
+
+// ============================================
 // API
 // ============================================
 async function fetchTodos() {
@@ -192,7 +235,7 @@ async function fetchTodos() {
     if (searchQuery) params.set('search', searchQuery);
 
     const url = params.toString() ? `${API_URL}?${params}` : API_URL;
-    const res = await fetch(url);
+    const res = await authFetch(url);
     const data = await res.json();
 
     if (data.success) {
@@ -213,9 +256,8 @@ async function fetchTodos() {
 
 async function addTodo(todoData) {
   try {
-    const res = await fetch(API_URL, {
+    const res = await authFetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(todoData),
     });
     const data = await res.json();
@@ -234,9 +276,8 @@ async function addTodo(todoData) {
 
 async function updateTodo(id, updates) {
   try {
-    const res = await fetch(`${API_URL}/${id}`, {
+    const res = await authFetch(`${API_URL}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
     });
     const data = await res.json();
@@ -264,7 +305,7 @@ async function deleteTodo(id) {
       await sleep(350);
     }
 
-    const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_URL}/${id}`, { method: 'DELETE' });
     const data = await res.json();
 
     if (data.success) {
@@ -281,9 +322,8 @@ async function deleteTodo(id) {
 
 async function bulkToggle(isCompleted) {
   try {
-    const res = await fetch(`${API_URL}/bulk/toggle`, {
+    const res = await authFetch(`${API_URL}/bulk/toggle`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isCompleted }),
     });
     const data = await res.json();
@@ -301,7 +341,7 @@ async function bulkToggle(isCompleted) {
 
 async function clearCompleted() {
   try {
-    const res = await fetch(API_URL, { method: 'DELETE' });
+    const res = await authFetch(API_URL, { method: 'DELETE' });
     const data = await res.json();
 
     if (data.success) {
@@ -621,6 +661,120 @@ function toggleSidebar() {
 }
 
 // ============================================
+// Auth Logic
+// ============================================
+
+function setupAuthUI() {
+  if (authToken) {
+    authWrapper.style.display = 'none';
+    appWrapper.style.display = 'flex';
+    fetchTodos();
+  } else {
+    authWrapper.style.display = 'flex';
+    appWrapper.style.display = 'none';
+  }
+}
+
+function loginSuccess(token, user) {
+  authToken = token;
+  activeUser = user;
+  localStorage.setItem('taskflow_token', token);
+  showToast(`Selamat datang kembali, ${user.username}!`, 'success');
+  
+  // Clear forms
+  loginEmail.value = '';
+  loginPassword.value = '';
+  regUsername.value = '';
+  regEmail.value = '';
+  regPassword.value = '';
+  
+  setupAuthUI();
+}
+
+function logoutUser(msg = 'Kamu berhasil keluar') {
+  authToken = null;
+  activeUser = null;
+  localStorage.removeItem('taskflow_token');
+  showToast(msg, 'info');
+  setupAuthUI();
+}
+
+goToRegister.addEventListener('click', (e) => {
+  e.preventDefault();
+  loginFormWrapper.classList.remove('active');
+  registerFormWrapper.classList.add('active');
+  setTimeout(() => regUsername.focus(), 100);
+});
+
+goToLogin.addEventListener('click', (e) => {
+  e.preventDefault();
+  registerFormWrapper.classList.remove('active');
+  loginFormWrapper.classList.add('active');
+  setTimeout(() => loginEmail.focus(), 100);
+});
+
+loginFormWrapper.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+  
+  const originalHtml = loginFormWrapper.querySelector('button[type="submit"]').innerHTML;
+  loginFormWrapper.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+  
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      loginSuccess(data.data.token, data.data);
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Gagal terhubung ke server', 'error');
+  } finally {
+    loginFormWrapper.querySelector('button[type="submit"]').innerHTML = originalHtml;
+  }
+});
+
+registerFormWrapper.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = regUsername.value.trim();
+  const email = regEmail.value.trim();
+  const password = regPassword.value;
+  
+  const originalHtml = registerFormWrapper.querySelector('button[type="submit"]').innerHTML;
+  registerFormWrapper.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+  
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      loginSuccess(data.data.token, data.data);
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Gagal terhubung ke server', 'error');
+  } finally {
+    registerFormWrapper.querySelector('button[type="submit"]').innerHTML = originalHtml;
+  }
+});
+
+btnLogout.addEventListener('click', () => {
+  logoutUser();
+});
+
+// ============================================
 // Event Listeners
 // ============================================
 
@@ -761,4 +915,21 @@ btnClearCompleted.addEventListener('click', () => {
 // ============================================
 // Init
 // ============================================
-document.addEventListener('DOMContentLoaded', fetchTodos);
+document.addEventListener('DOMContentLoaded', () => {
+  // Try to load user if token exists
+  if (authToken) {
+    authFetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          activeUser = data.data;
+          setupAuthUI();
+        } else {
+          logoutUser('Sesi kedaluwarsa');
+        }
+      })
+      .catch(() => logoutUser('Kesalahan jaringan'));
+  } else {
+    setupAuthUI();
+  }
+});

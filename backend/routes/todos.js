@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const Todo = require('../models/Todo');
+const protect = require('../middleware/auth');
 
-// GET /todos — Ambil semua todo (with search & filter)
-router.get('/', async (req, res) => {
+// GET /api/todos — Ambil semua todo (with search & filter)
+router.get('/', protect, async (req, res) => {
   try {
     const { search, priority, category, status } = req.query;
-    let filter = {};
+    let filter = { userId: req.user.id };
 
     // Search by title or description
     if (search) {
@@ -36,7 +37,7 @@ router.get('/', async (req, res) => {
     const todos = await Todo.find(filter).sort({ createdAt: -1 });
 
     // Get stats
-    const allTodos = await Todo.find();
+    const allTodos = await Todo.find({ userId: req.user.id });
     const stats = {
       total: allTodos.length,
       completed: allTodos.filter((t) => t.isCompleted).length,
@@ -66,8 +67,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /todos — Tambah todo baru
-router.post('/', async (req, res) => {
+// POST /api/todos — Tambah todo baru
+router.post('/', protect, async (req, res) => {
   try {
     const { title, description, priority, category, dueDate } = req.body;
 
@@ -79,6 +80,7 @@ router.post('/', async (req, res) => {
     }
 
     const todo = await Todo.create({
+      userId: req.user.id,
       title: title.trim(),
       description: description ? description.trim() : '',
       priority: priority || 'medium',
@@ -100,12 +102,12 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /todos/:id — Edit todo
-router.put('/:id', async (req, res) => {
+// PUT /api/todos/:id — Edit todo
+router.put('/:id', protect, async (req, res) => {
   try {
     const { title, description, isCompleted, priority, category, dueDate } = req.body;
 
-    const todo = await Todo.findById(req.params.id);
+    const todo = await Todo.findOne({ _id: req.params.id, userId: req.user.id });
 
     if (!todo) {
       return res.status(404).json({
@@ -151,10 +153,10 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /todos/:id — Hapus todo
-router.delete('/:id', async (req, res) => {
+// DELETE /api/todos/:id — Hapus todo
+router.delete('/:id', protect, async (req, res) => {
   try {
-    const todo = await Todo.findByIdAndDelete(req.params.id);
+    const todo = await Todo.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
 
     if (!todo) {
       return res.status(404).json({
@@ -183,10 +185,10 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// DELETE /todos — Bulk delete completed
-router.delete('/', async (req, res) => {
+// DELETE /api/todos — Bulk delete completed
+router.delete('/', protect, async (req, res) => {
   try {
-    const result = await Todo.deleteMany({ isCompleted: true });
+    const result = await Todo.deleteMany({ userId: req.user.id, isCompleted: true });
     res.json({
       success: true,
       message: `${result.deletedCount} todo selesai berhasil dihapus`,
@@ -201,11 +203,11 @@ router.delete('/', async (req, res) => {
   }
 });
 
-// PUT /todos — Bulk update (mark all complete/incomplete)
-router.patch('/bulk/toggle', async (req, res) => {
+// PUT /api/todos/bulk/toggle — Bulk update
+router.patch('/bulk/toggle', protect, async (req, res) => {
   try {
     const { isCompleted } = req.body;
-    const result = await Todo.updateMany({}, { isCompleted });
+    const result = await Todo.updateMany({ userId: req.user.id }, { isCompleted });
     res.json({
       success: true,
       message: isCompleted ? 'Semua todo ditandai selesai' : 'Semua todo dibuka kembali',

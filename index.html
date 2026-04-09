@@ -24,7 +24,67 @@
   <!-- Confetti container -->
   <canvas id="confetti-canvas"></canvas>
 
-  <div class="app-wrapper">
+  <!-- Authentication Flow -->
+  <div class="auth-wrapper" id="auth-wrapper">
+    <div class="auth-card">
+      <div class="logo justify-center mb-md">
+        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+        <span class="logo-text">TaskFlow</span>
+      </div>
+      
+      <!-- Login View -->
+      <form id="login-form" class="auth-form active">
+        <h2 class="auth-title">Selamat Datang Kembali</h2>
+        <p class="auth-subtitle">Masuk untuk melihat daftar tugasmu</p>
+        <div class="form-group mb-sm">
+          <div class="input-wrapper">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group mb-md">
+          <div class="input-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mb-sm">
+          <i class="fas fa-sign-in-alt"></i> Masuk
+        </button>
+        <p class="auth-switch">Belum punya akun? <a href="#" id="go-to-register">Daftar sekarang</a></p>
+      </form>
+
+      <!-- Register View -->
+      <form id="register-form" class="auth-form" style="display: none;">
+        <h2 class="auth-title">Buat Akun Baru</h2>
+        <p class="auth-subtitle">Kelola tugasmu lebih efisien hari ini</p>
+        <div class="form-group mb-sm">
+          <div class="input-wrapper">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="reg-username" placeholder="Username" required autocomplete="username">
+          </div>
+        </div>
+        <div class="form-group mb-sm">
+          <div class="input-wrapper">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="reg-email" placeholder="Email" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group mb-md">
+          <div class="input-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="reg-password" placeholder="Password (Min 6 karakter)" required minlength="6" autocomplete="new-password">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mb-sm">
+          <i class="fas fa-user-plus"></i> Daftar
+        </button>
+        <p class="auth-switch">Sudah punya akun? <a href="#" id="go-to-login">Masuk ke sini</a></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-wrapper" id="app-wrapper" style="display: none;">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -106,6 +166,9 @@
         </button>
         <button class="bulk-btn bulk-danger" id="btn-clear-completed" title="Hapus yang selesai">
           <i class="fas fa-trash-alt"></i> Hapus Yang Selesai
+        </button>
+        <button class="bulk-btn" id="btn-logout" title="Keluar akun" style="margin-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 15px;">
+          <i class="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>
     </aside>
