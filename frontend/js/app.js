@@ -22,6 +22,12 @@ let searchQuery = '';
 let deleteTargetId = null;
 
 // ============================================
+// DOM Elements
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// ============================================
 // Auth & App UI Switching
 // ============================================
 const authWrapper = $('#auth-wrapper');
@@ -38,12 +44,6 @@ const loginPassword = $('#login-password');
 const regUsername = $('#reg-username');
 const regEmail = $('#reg-email');
 const regPassword = $('#reg-password');
-
-// ============================================
-// DOM Elements
-// ============================================
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
 
 const todoForm = $('#todo-form');
 const todoTitle = $('#todo-title');
